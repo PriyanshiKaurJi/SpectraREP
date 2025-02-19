@@ -1,11 +1,10 @@
 {
-	"name": "Spectra Bot",
-	"version": "1.0",
-	"description": "A simple Bot chat whatsaap using paring method Made by Mr perfect",
-	"main": "index.js",
-	},
-	"dependencies": {
-	    "@adiwajshing/keyed-db": "^0.2.4",
+  "name": "Spectra Bot",
+  "version": "1.0",
+  "description": "A simple Bot chat WhatsApp using pairing method. Made by Mr Perfect.",
+  "main": "index.js",
+  "dependencies": {
+    "@adiwajshing/keyed-db": "^0.2.4",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "latest",
@@ -22,24 +21,21 @@
     "y": "^0.3.2",
     "yt-search": "^2.12.1",
     "ytdl-core": "^4.11.5"
-  }
-}
-	},
-	"scripts": {
-		"start": "set NODE_ENV=&& node index.js",
-		"dev": "set NODE_ENV=development&& node index.js",
-		"prod": "set NODE_ENV=production&& node index.js"
-	},
-	"author": "Mr-Perfect",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/Mr-Perfect-Spector/Spectra.git"
-	},
-	"keywords": [],
-	"bugs": {
-		"url": "https://github.com/Mr-Perfect-Spector/Spectra/issues"
-	},
-	"homepage": "https://github.com/Mr-Perfect-Spector/Spectra#readme",
-	
+  },
+  "scripts": {
+    "start": "set NODE_ENV=&& node index.js",
+    "dev": "set NODE_ENV=development&& node index.js",
+    "prod": "set NODE_ENV=production&& node index.js"
+  },
+  "author": "Mr-Perfect",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mr-Perfect-Spector/Spectra.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Mr-Perfect-Spector/Spectra/issues"
+  },
+  "homepage": "https://github.com/Mr-Perfect-Spector/Spectra#readme"
 }
