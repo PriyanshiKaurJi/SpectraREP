@@ -1,0 +1,60 @@
+{
+  "whatsappAccount": {
+    "phoneNumber": "",
+    "sessionPath": "./session",
+    "qrTimeout": 60,
+    "multiDevice": true
+  },
+  "botSettings": {
+    "botName": "Spectra",
+    "prefix": "+",
+    "ownerNumber": "977986347906",
+    "language": "en",
+    "timeZone": "Asia/nepal"
+  },
+  "database": {
+    "type": "sqlite",
+    "uriMongodb": "",
+    "autoSyncWhenStart": false
+  },
+  "adminOnly": {
+    "enable": false,
+    "adminNumbers": [
+"977986347906",
+"Add your number "
+]
+  },
+  "whiteListMode": {
+    "enable": false,
+    "allowedNumbers": [""]
+  },
+  "messageHandling": {
+    "autoRead": true,
+    "deleteCommandMessages": false,
+    "logMessages": true
+  },
+  "antiSpam": {
+    "enable": true,
+    "cooldownTime": 5
+  },
+  "webhooks": {
+    "enable": false,
+    "url": ""
+  },
+  "serverUptime": {
+    "enable": true,
+    "port": 3001
+  },
+  "autoRestart": {
+    "enable": false,
+    "time": null
+  },
+  "notifications": {
+    "enable": false
+  },
+  "logEvents": {
+    "enable": true,
+    "logErrors": true,
+    "logCommands": true
+  }
+}
