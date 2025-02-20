@@ -1,56 +1,40 @@
-Spectra - WhatsApp Multi-Function Bot
+Here's the README.md script:
 
+# Spectra - WhatsApp Multi-Function Bot  
 
+![Spectra Bot](https://github.com/Mr-Perfect-Spector/Spectra/raw/main/assets/banner.png)  
 
-Creator & Owner: Mr Perfect
-Contributor: Priyanshi Kaur
-Repository: Spectra GitHub Repo
+**Creator & Owner:** Mr Perfect  
+**Contributor:** Priyanshi Kaur  
+**Repository:** [Spectra GitHub Repo](https://github.com/Mr-Perfect-Spector/Spectra.git)  
 
-⚡ About Spectra
+## ⚡ About Spectra  
+Spectra is a powerful multi-function WhatsApp bot that provides various automation and utility features. It is designed to handle multiple tasks efficiently while ensuring a seamless user experience.  
 
-Spectra is a powerful multi-function WhatsApp bot that provides various automation and utility features. It is designed to handle multiple tasks efficiently while ensuring a seamless user experience.
+### 🛠 Features  
+- Multi-device support  
+- Customizable prefix commands  
+- Admin-only mode  
+- Auto-read and logging options  
+- Anti-spam protection  
+- Database integration (SQLite/MongoDB)  
+- Webhook support  
+- Auto-restart and server uptime monitoring  
+- Continuous updates with new features  
 
-🛠 Features
+## 🚀 Getting Started  
 
-Multi-device support
+### 📌 Requirements  
+- Node.js (latest LTS version)  
+- A valid WhatsApp session (session ID required)  
+- Database (SQLite or MongoDB)  
+- Stable internet connection  
 
-Customizable prefix commands
-
-Admin-only mode
-
-Auto-read and logging options
-
-Anti-spam protection
-
-Database integration (SQLite/MongoDB)
-
-Webhook support
-
-Auto-restart and server uptime monitoring
-
-Continuous updates with new features
-
-
-🚀 Getting Started
-
-📌 Requirements
-
-Node.js (latest LTS version)
-
-A valid WhatsApp session (session ID required)
-
-Database (SQLite or MongoDB)
-
-Stable internet connection
-
-
-🔧 Installation
-
-1. Clone the repository:
-
-git clone https://github.com/Mr-Perfect-Spector/Spectra.git
-cd Spectra
-
+### 🔧 Installation  
+1. Clone the repository:  
+   ```bash
+   git clone https://github.com/Mr-Perfect-Spector/Spectra.git
+   cd Spectra
 
 2. Install dependencies:
 
@@ -91,7 +75,7 @@ multiDevice: Set to true for multi-device support.
 "botSettings": {
   "botName": "Spectra",
   "prefix": "+",
-  "ownerNumber": "977986347906",
+  "ownerNumber": "YOUR_NUMBER",
   "language": "en",
   "timeZone": "Asia/nepal"
 }
@@ -111,7 +95,7 @@ timeZone: The bot's timezone settings.
 
 "adminOnly": {
   "enable": false,
-  "adminNumbers": ["YOUR_NUMBER"]
+  "adminNumbers": ["ADMIN_NUMBER", "Add More If You Want"]
 },
 "whiteListMode": {
   "enable": false,
@@ -216,4 +200,6 @@ Want to contribute? Fork the repo and submit a pull request!
 📞 Support
 
 For queries, contact the creator Mr Perfect or contributor Priyanshi Kaur.
+
+And if you want to contribute in our project we are happy to have you. 
 
