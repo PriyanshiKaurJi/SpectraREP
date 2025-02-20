@@ -23,7 +23,7 @@ console.log(chalk.cyan.bold('Spectra Bot - A Simple WhatsApp Chat Bot'));
 console.log(chalk.magenta('    Created By Mr - Perfect with ❤️'));
 console.log(
   chalk.yellow.bold(
-    'Source Code: '
+    'Source Code: https://github.com/Mr-Perfect-Spector/Spectra'
   )
 );
 console.log(line)
