@@ -8,9 +8,9 @@
   "botSettings": {
     "botName": "Spectra",
     "prefix": "+",
-    "ownerNumber": "977986347906",
+    "ownerNumber": "919770202327",
     "language": "en",
-    "timeZone": "Asia/nepal"
+    "timeZone": "Asia/Kolkata"
   },
   "database": {
     "type": "sqlite",
@@ -20,7 +20,7 @@
   "adminOnly": {
     "enable": false,
     "adminNumbers": [
-"977986347906",
+"919770202327",
 "Add your number "
 ]
   },
