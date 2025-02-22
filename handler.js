@@ -1,16 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
-const { getPermissionLevel } = require('./utils/permission'); 
-const { logInfo, logSuccess, logError, logMessageDetails } = require('./utils/logger'); 
+const { getPermissionLevel } = require('./utils/permission');
+const { logInfo, logSuccess, logError, logMessageDetails } = require('./utils/logger');
 const gradient = require('gradient-string');
-// Import logMessageDetails
 
 global.owner = config.botSettings.ownerNumber ? [config.botSettings.ownerNumber] : [];
 global.prefix = config.botSettings.prefix || '!';
 global.botName = config.botSettings.botName || 'Bot';
 global.commands = new Map();
 global.events = new Map();
+global.commandUsage = {};
+global.userStats = {}; // New: Stores user interactions
 global.cc = {};
 const cooldowns = new Map();
 
@@ -23,7 +24,13 @@ const loadCommands = () => {
         const command = require(path.join(commandsFolder, file));
         if (command.name && typeof command.run === 'function') {
             global.commands.set(command.name, command);
-            logSuccess(`Loaded command: ${command.name}`);
+
+            // Handle aliases
+            if (command.aliases && Array.isArray(command.aliases)) {
+                command.aliases.forEach(alias => global.commands.set(alias, command));
+            }
+
+            logSuccess(`Loaded command: ${command.name} ${command.aliases ? `[Aliases: ${command.aliases.join(', ')}]` : ''}`);
         }
     });
 };
@@ -39,7 +46,6 @@ const loadEvents = () => {
     });
 };
 
-
 module.exports = async (sock, m) => {
     try {
         const body = (
@@ -51,10 +57,8 @@ module.exports = async (sock, m) => {
             m.mtype === 'buttonsResponseMessage' && m.message.buttonsResponseMessage.selectedButtonId ||
             m.mtype === 'templateButtonReplyMessage' && m.message.templateButtonReplyMessage.selectedId
         ) || '';
-        const sender = m.key.fromMe
-            ? sock.user.id.split(':')[0] + '@s.whatsapp.net'
-            : m.key.participant || m.key.remoteJid;
 
+        const sender = m.key.fromMe ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : m.key.participant || m.key.remoteJid;
         const botNumber = await sock.decodeJid(sock.user.id);
         const isGroup = m.key.remoteJid.endsWith('@g.us');
         const isCmd = body.startsWith(global.prefix);
@@ -72,61 +76,47 @@ module.exports = async (sock, m) => {
             }
         }
 
-            logMessageDetails({
-          
-            
-                
-                ownerId: global.owner,
-                sender: sender,
-                groupName: groupName,
-                message: body,
-                reactions: m.message.reaction ? {
-                    user: m.message.reaction.userJid,
-                    emoji: m.message.reaction.emoji
-                } : null,
-                timezone: config.botSettings.timeZone // Use the configured timezone
-            });
+        logMessageDetails({
+            ownerId: global.owner,
+            sender: sender,
+            groupName: groupName,
+            message: body,
+            timezone: config.botSettings.timeZone,
+        });
 
         if (isCmd && global.commands.has(command)) {
             const cmd = global.commands.get(command);
             const permissionLevel = getPermissionLevel(sender.replace(/[^0-9]/g, ''), groupMetadata);
 
             if (cmd.permission > permissionLevel) {
-                return await sock.sendMessage(
-                    m.key.remoteJid,
-                    { text: `You don't have permission to use "${cmd.name}".` },
-                    { quoted: m }
-                );
+                return await sock.sendMessage(m.key.remoteJid, { text: `You don't have permission to use "${cmd.name}".` }, { quoted: m });
             }
 
             const now = Date.now();
             if (!cooldowns.has(command)) cooldowns.set(command, new Map());
             const timestamps = cooldowns.get(command);
-            const cooldownAmount = (cmd.cooldowns || 5) * 1000;
+            const cooldownAmount = (cmd.cooldown || 5) * 1000;
 
             if (timestamps.has(sender)) {
                 const expirationTime = timestamps.get(sender) + cooldownAmount;
                 if (now < expirationTime) {
                     const timeLeft = ((expirationTime - now) / 1000).toFixed(1);
-                    return await sock.sendMessage(
-                        m.key.remoteJid,
-                        { text: `You're using "${command}" too fast. Wait ${timeLeft}s.` },
-                        { quoted: m }
-                    );
+                    return await sock.sendMessage(m.key.remoteJid, { text: `You're using "${command}" too fast. Wait ${timeLeft}s.` }, { quoted: m });
                 }
             }
 
             timestamps.set(sender, now);
             setTimeout(() => timestamps.delete(sender), cooldownAmount);
 
-            logSuccess(`${sender} executed: ${command}`);
+            // Track command usage
+            global.commandUsage[command] = (global.commandUsage[command] || 0) + 1;
+            global.userStats[sender] = (global.userStats[sender] || 0) + 1;
+
+            logSuccess(`${sender} executed: ${command} (Usage: ${global.commandUsage[command]})`);
             await cmd.run({ sock, m, args, sender, botNumber });
         } else if (isCmd) {
-            await sock.sendMessage(
-                m.key.remoteJid,
-                { text: `Command "${command}" not found. Try ${global.prefix}help for a list of commands.` },
-                { quoted: m }
-            );
+            // Auto-response for unknown commands
+            await sock.sendMessage(m.key.remoteJid, { text: `Command "${command}" not found. Try ${global.prefix}help for a list of commands.` }, { quoted: m });
         }
 
         global.events.forEach(event => {
