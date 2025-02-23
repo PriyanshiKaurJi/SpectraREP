@@ -1,4 +1,4 @@
-+cmd install cmd const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 const commandDir = path.resolve(__dirname);
