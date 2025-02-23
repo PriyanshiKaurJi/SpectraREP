@@ -1,223 +1,163 @@
-const fs = require('fs');
++cmd install cmd const fs = require('fs');
 const path = require('path');
 
+const commandDir = path.resolve(__dirname);
 const uninstallFolder = path.resolve(__dirname, 'uninstall');
+
 if (!fs.existsSync(uninstallFolder)) {
-    fs.mkdirSync(uninstallFolder);
+    fs.mkdirSync(uninstallFolder, { recursive: true });
 }
 
 global.cc.loadCommand = function (commandName) {
     try {
-        const commandPath = path.resolve(__dirname, `${commandName}.js`);
-        if (fs.existsSync(commandPath)) {
-            const command = require(commandPath);
-            global.commands.set(command.name, command);
-            return `✅ | "${commandName}" has been loaded successfully.`;
-        } else {
-            return `Command "${commandName}" does not exist.`;
-        }
+        const commandPath = path.join(commandDir, `${commandName}.js`);
+        if (!fs.existsSync(commandPath)) return `❌ Command "${commandName}" does not exist.`;
+
+        delete require.cache[require.resolve(commandPath)];
+        const command = require(commandPath);
+        global.commands.set(command.name, command);
+
+        return `✅ Loaded "${commandName}" successfully.`;
     } catch (error) {
-        return `Failed to load ${commandName}: ${error.message}`;
+        return `❌ Failed to load "${commandName}": ${error.message}`;
     }
 };
 
 global.cc.loadAll = function () {
-    const commandFiles = fs.readdirSync(path.resolve(__dirname)).filter(file => file.endsWith('.js'));
-    let successCount = 0;
-    let failCount = 0;
-    let result = [];
+    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.js'));
+    let successCount = 0, failCount = 0, results = [];
 
     for (const file of commandFiles) {
-        const commandPath = path.resolve(__dirname, file);
-        try {
-            const command = require(commandPath);
-            global.commands.set(command.name, command);
-            successCount++;
-            result.push(`${file} loaded successfully.`);
-        } catch (error) {
-            failCount++;
-            result.push(`Failed to load ${file}: ${error.message}`);
-        }
+        const commandName = file.replace('.js', '');
+        const message = global.cc.loadCommand(commandName);
+        message.includes('✅') ? successCount++ : failCount++;
+        results.push(message);
     }
 
-    return `${successCount} Commands Loaded Successfully\n${failCount} Failed to Load\n${result.join('\n')}`;
+    return `📂 ${successCount} commands loaded.\n❌ ${failCount} failed.\n\n${results.join('\n')}`;
 };
 
 global.cc.unloadCommand = function (commandName) {
     try {
-        const commandPath = path.resolve(__dirname, `${commandName}.js`);
-        if (fs.existsSync(commandPath)) {
-            delete require.cache[require.resolve(commandPath)];
-            global.commands.delete(commandName);
-            return `✅ | "${commandName}" has been unloaded successfully.`;
-        } else {
-            return `Command "${commandName}" does not exist.`;
-        }
+        const commandPath = path.join(commandDir, `${commandName}.js`);
+        if (!fs.existsSync(commandPath)) return `❌ Command "${commandName}" does not exist.`;
+
+        delete require.cache[require.resolve(commandPath)];
+        global.commands.delete(commandName);
+
+        return `✅ Unloaded "${commandName}" successfully.`;
     } catch (error) {
-        return `Failed to unload ${commandName}: ${error.message}`;
+        return `❌ Failed to unload "${commandName}": ${error.message}`;
     }
 };
 
 global.cc.unloadAll = function () {
-    const commandFiles = fs.readdirSync(path.resolve(__dirname)).filter(file => file.endsWith('.js'));
-    let successCount = 0;
-    let failCount = 0;
-    let result = [];
+    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.js'));
+    let successCount = 0, failCount = 0, results = [];
 
     for (const file of commandFiles) {
-        const commandPath = path.resolve(__dirname, file);
-        try {
-            delete require.cache[require.resolve(commandPath)];
-            global.commands.delete(file.replace('.js', ''));
-            successCount++;
-            result.push(`${file} unloaded successfully.`);
-        } catch (error) {
-            failCount++;
-            result.push(`Failed to unload ${file}: ${error.message}`);
-        }
+        const commandName = file.replace('.js', '');
+        const message = global.cc.unloadCommand(commandName);
+        message.includes('✅') ? successCount++ : failCount++;
+        results.push(message);
     }
 
-    return `${successCount} Commands Unloaded Successfully\n${failCount} Failed to Unload\n${result.join('\n')}`;
+    return `🗑 ${successCount} commands unloaded.\n❌ ${failCount} failed.\n\n${results.join('\n')}`;
 };
 
 global.cc.deleteCommand = function (commandName) {
     try {
-        const commandPath = path.resolve(__dirname, `${commandName}.js`);
-        if (fs.existsSync(commandPath)) {
-            fs.unlinkSync(commandPath);
-            return `✅ | "${commandName}" has been deleted successfully.`;
-        } else {
-            return `Command "${commandName}" does not exist.`;
-        }
+        const commandPath = path.join(commandDir, `${commandName}.js`);
+        if (!fs.existsSync(commandPath)) return `❌ Command "${commandName}" does not exist.`;
+
+        fs.unlinkSync(commandPath);
+        return `🗑 Deleted "${commandName}" successfully.`;
     } catch (error) {
-        return `Failed to delete ${commandName}: ${error.message}`;
+        return `❌ Failed to delete "${commandName}": ${error.message}`;
     }
 };
 
 global.cc.deleteAll = function () {
-    const commandFiles = fs.readdirSync(path.resolve(__dirname)).filter(file => file.endsWith('.js'));
-    let successCount = 0;
-    let failCount = 0;
-    let result = [];
+    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.js'));
+    let successCount = 0, failCount = 0, results = [];
 
     for (const file of commandFiles) {
-        const commandPath = path.resolve(__dirname, file);
-        try {
-            fs.unlinkSync(commandPath);
-            successCount++;
-            result.push(`${file} deleted successfully.`);
-        } catch (error) {
-            failCount++;
-            result.push(`Failed to delete ${file}: ${error.message}`);
-        }
+        const commandName = file.replace('.js', '');
+        const message = global.cc.deleteCommand(commandName);
+        message.includes('🗑') ? successCount++ : failCount++;
+        results.push(message);
     }
 
-    return `${successCount} Commands Deleted Successfully\n${failCount} Failed to Delete\n${result.join('\n')}`;
+    return `🚮 ${successCount} commands deleted.\n❌ ${failCount} failed.\n\n${results.join('\n')}`;
+};
+
+global.cc.cancelCommand = function (commandName) {
+    try {
+        const commandPath = path.join(commandDir, `${commandName}.js`);
+        const uninstallPath = path.join(uninstallFolder, `${commandName}.js`);
+
+        if (!fs.existsSync(commandPath)) return `❌ Command "${commandName}" does not exist.`;
+
+        fs.renameSync(commandPath, uninstallPath);
+        return `🔁 Moved "${commandName}" to uninstall folder.`;
+    } catch (error) {
+        return `❌ Failed to cancel "${commandName}": ${error.message}`;
+    }
+};
+
+global.cc.shareCommand = function (commandName) {
+    try {
+        const commandPath = path.join(commandDir, `${commandName}.js`);
+        if (!fs.existsSync(commandPath)) return `❌ Command "${commandName}" does not exist.`;
+
+        return fs.readFileSync(commandPath, 'utf-8');
+    } catch (error) {
+        return `❌ Failed to fetch "${commandName}": ${error.message}`;
+    }
+};
+
+global.cc.installCommand = function (commandName, commandCode) {
+    try {
+        if (!commandName || !commandCode) return `❌ Provide command name and code.`;
+
+        const commandPath = path.join(commandDir, `${commandName}.js`);
+        fs.writeFileSync(commandPath, commandCode);
+        
+        setTimeout(() => {
+            global.cc.loadCommand(commandName);
+        }, 5000);
+
+        return `⚙️ Installing "${commandName}"...`;
+    } catch (error) {
+        return `❌ Error installing "${commandName}": ${error.message}`;
+    }
 };
 
 module.exports = {
     name: 'cmd',
-    description: 'Load, manage, install, unload, and delete commands',
+    description: 'Manage bot commands dynamically.',
     permission: 0,
     cooldowns: 5,
     dmUser: true,
     run: async ({ sock, m, args }) => {
         const command = args[0]?.toLowerCase();
+        const commandName = args[1]?.toLowerCase();
+        const commandCode = args.slice(2).join(' ');
 
-        if (command === 'load') {
-            const commandName = args[1]?.toLowerCase();
-            if (commandName) {
-                const message = global.cc.loadCommand(commandName);
-                await sock.sendMessage(m.key.remoteJid, { text: message });
-            } else {
-                await sock.sendMessage(m.key.remoteJid, { text: 'Please specify a command to load.' });
-            }
-        } else if (command === 'loadall') {
-            const message = global.cc.loadAll();
-            await sock.sendMessage(m.key.remoteJid, { text: message });
-        } else if (command === 'unload') {
-            const commandName = args[1]?.toLowerCase();
-            if (commandName) {
-                const message = global.cc.unloadCommand(commandName);
-                await sock.sendMessage(m.key.remoteJid, { text: message });
-            } else {
-                await sock.sendMessage(m.key.remoteJid, { text: 'Please specify a command to unload.' });
-            }
-        } else if (command === 'unloadall') {
-            const message = global.cc.unloadAll();
-            await sock.sendMessage(m.key.remoteJid, { text: message });
-        } else if (command === 'delete') {
-            const commandName = args[1]?.toLowerCase();
-            if (commandName) {
-                const message = global.cc.deleteCommand(commandName);
-                await sock.sendMessage(m.key.remoteJid, { text: message });
-            } else {
-                await sock.sendMessage(m.key.remoteJid, { text: 'Please specify a command to delete.' });
-            }
-        } else if (command === 'deleteall') {
-            const message = global.cc.deleteAll();
-            await sock.sendMessage(m.key.remoteJid, { text: message });
-        } else if (command === 'cancel') {
-            const commandName = args[1]?.toLowerCase();
-            if (commandName) {
-                try {
-                    const commandPath = path.resolve(__dirname, `${commandName}.js`);
-                    if (fs.existsSync(commandPath)) {
-                        const uninstallPath = path.resolve(uninstallFolder, `${commandName}.js`);
-                        fs.renameSync(commandPath, uninstallPath);
-                        await sock.sendMessage(m.key.remoteJid, { text: `${commandName} moved to uninstall folder.` });
-                    } else {
-                        await sock.sendMessage(m.key.remoteJid, { text: `Command ${commandName} does not exist.` });
-                    }
-                } catch (error) {
-                    await sock.sendMessage(m.key.remoteJid, { text: `Failed to cancel ${commandName}: ${error.message}` });
-                }
-            } else {
-                await sock.sendMessage(m.key.remoteJid, { text: 'Please specify a command to cancel.' });
-            }
-        } else if (command === 'share') {
-            const commandName = args[1]?.toLowerCase();
-            if (commandName) {
-                try {
-                    const commandPath = path.resolve(__dirname, `${commandName}.js`);
-                    if (fs.existsSync(commandPath)) {
-                        const code = fs.readFileSync(commandPath, 'utf-8');
-                        await sock.sendMessage(m.key.remoteJid, { text: `Here is the code for ${commandName}:\n\n${code}`});
-                    } else {
-                        await sock.sendMessage(m.key.remoteJid, { text: `Command ${commandName} does not exist.` });
-                    }
-                } catch (error) {
-                    await sock.sendMessage(m.key.remoteJid, { text: `Failed to fetch the code for ${commandName}: ${error.message}` });
-                }
-            } else {
-                await sock.sendMessage(m.key.remoteJid, { text: 'Please specify a command to share.' });
-            }
-        } else if (command === 'install') {
-            const commandName = args[1]?.toLowerCase();
-            const commandCode = args.slice(2).join(' ');
-            if (commandName && commandCode) {
-                await sock.sendMessage(m.key.remoteJid, { text: `Installing command ${commandName}...` });
-
-                try {
-                    const commandDir = path.resolve(__dirname);
-                    if (!fs.existsSync(commandDir)) {
-                        fs.mkdirSync(commandDir, { recursive: true });
-                    }
-
-                    const commandPath = path.resolve(commandDir, `${commandName}.js`);
-                    fs.writeFileSync(commandPath, commandCode);
-                    setTimeout(async () => {
-                        const message = `Successfully Installed ${commandName}`;
-                        await sock.sendMessage(m.key.remoteJid, { text: message });
-                    }, 7000); 
-                } catch (error) {
-                    await sock.sendMessage(m.key.remoteJid, { text: `Error while installing ${commandName}: ${error.message}` });
-                }
-            } else {
-                await sock.sendMessage(m.key.remoteJid, { text: 'Please provide both command name and code.' });
-            }
-        } else {
-            await sock.sendMessage(m.key.remoteJid, { text: 'Invalid option. Use load, loadall, unload, unloadall, delete, deleteall, cancel, share, or install.' });
+        let message;
+        switch (command) {
+            case 'load': message = global.cc.loadCommand(commandName); break;
+            case 'loadall': message = global.cc.loadAll(); break;
+            case 'unload': message = global.cc.unloadCommand(commandName); break;
+            case 'unloadall': message = global.cc.unloadAll(); break;
+            case 'delete': message = global.cc.deleteCommand(commandName); break;
+            case 'deleteall': message = global.cc.deleteAll(); break;
+            case 'cancel': message = global.cc.cancelCommand(commandName); break;
+            case 'share': message = global.cc.shareCommand(commandName); break;
+            case 'install': message = global.cc.installCommand(commandName, commandCode); break;
+            default: message = `❌ Invalid command. Use: load, loadall, unload, unloadall, delete, deleteall, cancel, share, install.`; break;
         }
+
+        await sock.sendMessage(m.key.remoteJid, { text: message });
     },
 };
