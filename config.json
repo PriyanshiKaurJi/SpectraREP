@@ -7,15 +7,15 @@
   },
   "botSettings": {
     "botName": "Spectra",
-    "prefix": "+",
+    "prefix": ".",
     "ownerNumber": "919770202327",
     "language": "en",
     "timeZone": "Asia/Kolkata"
   },
   "database": {
     "type": "sqlite",
-    "uriMongodb": "",
-    "autoSyncWhenStart": false
+    "uriMongodb": "mongodb+srv://priyanshikaurji:priyanshikaurji@cluster0.kcbnt.mongodb.net/Spectra?retryWrites=true&w=majority&appName=Cluster0",
+    "autoSyncWhenStart": true
   },
   "adminOnly": {
     "enable": false,
