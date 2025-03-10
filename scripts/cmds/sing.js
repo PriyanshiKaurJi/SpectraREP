@@ -1,73 +1,85 @@
-const axios = require('axios');
-const yts = require('yt-search');
-const fs = require('fs');
+const ytdl = require('@distube/ytdl-core');
+const ytSearch = require('yt-search');
+const fs = require('fs-extra');
 const path = require('path');
-const fetch = require('node-fetch');
 
-const cacheFolder = path.resolve(__dirname, './cache');
-
-if (!fs.existsSync(cacheFolder)) {
-    fs.mkdirSync(cacheFolder);
+const downloadDir = path.join(__dirname, '../../downloads');
+if (!fs.existsSync(downloadDir)) {
+    fs.mkdirSync(downloadDir, { recursive: true });
 }
 
 module.exports = {
     name: 'sing',
-    description: 'Search and download audio from YouTube',
+    description: 'Search and download audio/video from YouTube',
     permission: 0,
     cooldowns: 5,
     dmUser: true,
     author: 'Priyanshi Kaur',
     run: async ({ sock, m, args }) => {
         if (!args.length) {
-            return m.reply('Please provide a search term or YouTube URL.');
+            return await sock.sendMessage(m.key.remoteJid, { text: '❌ *Error:* Please provide a search term or YouTube URL.' }, { quoted: m });
         }
 
-        const query = args.join(' ');
-        const searchingMessage = await sock.sendMessage(m.key.remoteJid, { text: 'Searching...' });
+        const input = args.join(' ');
+        const formatMatch = input.match(/-(audio|video)$/i);
+        const format = formatMatch ? formatMatch[1].toLowerCase() : 'audio'; 
+        const query = input.replace(/-(audio|video)$/i, '').trim();
+
+        const searchResults = await ytSearch(query);
+        if (!searchResults.videos.length) {
+            return await sock.sendMessage(m.key.remoteJid, { text: '⚠️ *No results found!* Try a different query.' }, { quoted: m });
+        }
+
+        const selectedVideo = searchResults.videos[0];
+        const fileExtension = format === 'video' ? 'mp4' : 'mp3';
+        const filePath = path.join(downloadDir, `${selectedVideo.videoId}.${fileExtension}`);
+
+        const downloadingMessage = await sock.sendMessage(m.key.remoteJid, { text: `⏳ Downloading ${format === 'video' ? 'video' : 'audio'}...` });
 
         try {
-            const searchResults = await yts(query);
-            const video = searchResults.videos[0];
+            const streamOptions = format === 'video' ? {} : { filter: 'audioonly' };
+            const stream = ytdl(selectedVideo.url, streamOptions);
 
-            if (!video) {
-                await sock.sendMessage(m.key.remoteJid, { text: 'No results found for your query.' });
-                return;
-            }
+            stream.pipe(fs.createWriteStream(filePath)).on('finish', async () => {
+                const mediaMessage = format === 'audio'
+                    ? {
+                        audio: fs.readFileSync(filePath),
+                        mimetype: 'audio/mpeg',
+                        ptt: false
+                    }
+                    : {
+                        video: fs.readFileSync(filePath),
+                        mimetype: 'video/mp4'
+                    };
 
-            const apiKey = 'priyansh-here';
-            const apiUrl = `https://priyansh-ai.onrender.com/youtube?id=${video.videoId}&type=audio&apikey=${apiKey}`;
+                await sock.sendMessage(m.key.remoteJid, {
+                    ...mediaMessage,
+                    caption: `🎵 *Title:* ${selectedVideo.title}\n⏱️ *Duration:* ${selectedVideo.timestamp}\n🔗 *YouTube Link:* ${selectedVideo.url}`,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: selectedVideo.title,
+                            body: `⏱️ Duration: ${selectedVideo.timestamp}`,
+                            thumbnailUrl: selectedVideo.thumbnail,
+                            mediaType: 2,
+                            mediaUrl: selectedVideo.url,
+                            sourceUrl: selectedVideo.url
+                        }
+                    }
+                }, { quoted: m });
 
-            const downloadResponse = await axios.get(apiUrl);
-            const downloadUrl = downloadResponse.data.downloadUrl;
+                await sock.sendMessage(m.key.remoteJid, { delete: downloadingMessage.key });
 
-            const response = await fetch(downloadUrl);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch song. Status code: ${response.status}`);
-            }
-
-            const filename = `${video.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp3`;
-            const downloadPath = path.join(cacheFolder, filename);
-
-            const songBuffer = await response.buffer();
-            fs.writeFileSync(downloadPath, songBuffer);
-
-            await sock.sendMessage(m.key.remoteJid, {
-                audio: { url: downloadPath },
-                mimetype: 'audio/mp4',
-                ptt: false
+                fs.unlinkSync(filePath);
             });
 
-            await m.reply(`🎵 Here is your music:\n\n*Title:* ${video.title}\n*Duration:* ${video.timestamp}\n*YouTube Link:* ${video.url}`);
-
-            await sock.sendMessage(m.key.remoteJid, { delete: searchingMessage.key });
-
-            fs.unlink(downloadPath, (err) => {
-                if (err) console.error('Error deleting audio file:', err);
+            stream.on('error', async (error) => {
+                console.error('Download error:', error);
+                await sock.sendMessage(m.key.remoteJid, { text: '❌ *Download Failed!* Please try again later.' }, { quoted: m });
             });
 
         } catch (error) {
-            console.error('Error fetching audio:', error.message);
-            await sock.sendMessage(m.key.remoteJid, { text: 'An error occurred. Please try again.' });
+            console.error('Error:', error);
+            await sock.sendMessage(m.key.remoteJid, { text: '❌ *Error:* Something went wrong. Try again later.' }, { quoted: m });
         }
-    },
+    }
 };
